@@ -1,16 +1,20 @@
 /**
  * Oura token storage for Vercel serverless.
- * Uses ONLY Upstash REST (UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN).
- * No native Redis client — avoids "string did not match the expected pattern" in serverless.
+ * Uses Upstash REST only. Accepts either:
+ * - UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN, or
+ * - storage_KV_REST_API_URL + storage_KV_REST_API_TOKEN (Vercel when project is linked to Upstash store).
  */
 import { Redis } from '@upstash/redis';
 
 const KEY = 'oura_tokens';
 
 function getRedis() {
-  const url = process.env.UPSTASH_REDIS_REST_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
-  if (!url || !token || !url.startsWith('http')) return null;
+  // Standard Upstash, or Vercel-linked store (names can be storage_KV_* or STORAGE_KV_*)
+  let url = process.env.UPSTASH_REDIS_REST_URL || process.env.storage_KV_REST_API_URL || process.env.STORAGE_KV_REST_API_URL || process.env.KV_REST_API_URL;
+  let token = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.storage_KV_REST_API_TOKEN || process.env.STORAGE_KV_REST_API_TOKEN || process.env.KV_REST_API_TOKEN;
+  if (!url || !token || !String(url).trim().startsWith('http')) return null;
+  url = String(url).trim();
+  token = String(token).trim();
   return new Redis({ url, token });
 }
 
