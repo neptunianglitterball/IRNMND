@@ -48,10 +48,10 @@ Precision fat-loss coach app: 1800 kcal target, AI-generated nutrition & trainin
 1. Push the repo to GitHub and import it in [Vercel](https://vercel.com). Build: `npm run build`, Output: `dist`. **Critical for Oura API:** In Vercel → **Settings** → **Build and Deployment** → **Framework Preset**, set to **Other** (not Vite). With "Vite", only the static `dist/` is deployed and `/api/*` returns 404. With "Other", both `dist/` and the `api/` folder are deployed so `/api/oura/*` work. Root Directory must be empty (or the folder that contains `package.json` and `api/`).
 2. **Environment variables** (Vercel → Project → Settings → Environment Variables):
    - `OURA_CLIENT_ID`, `OURA_CLIENT_SECRET` from your [Oura app](https://cloud.ouraring.com/oauth/applications).
-   - `OURA_REDIRECT_URI` = `https://YOUR_VERCEL_DOMAIN.vercel.app/api/oura/callback` (replace with your real domain).
+   - `OURA_REDIRECT_URI` = `https://YOUR_VERCEL_DOMAIN.vercel.app/api/oura-callback` (flat path; replace with your real domain).
    - `OURA_FRONTEND_URL` = `https://YOUR_VERCEL_DOMAIN.vercel.app` (no trailing slash).
 3. **Upstash Redis (required for Oura in production):** In the Vercel project go to **Integrations** → **Upstash Redis** → Add / Connect and link it to this project. This adds `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` automatically. Do not use a different Redis (e.g. Redis Labs with `REDIS_URL`) — only Upstash REST is supported so Oura tokens work in serverless.
-4. In the **Oura** app settings, add the redirect URI: `https://YOUR_VERCEL_DOMAIN.vercel.app/api/oura/callback`.
+4. In the **Oura** app settings, add the redirect URI: `https://YOUR_VERCEL_DOMAIN.vercel.app/api/oura-callback`.
 5. Redeploy. "Connect Oura" on the live site will then work.
 
 ## Scripts

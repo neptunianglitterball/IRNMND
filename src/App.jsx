@@ -340,13 +340,13 @@ export default function App() {
   const fetchOuraStatus = async () => {
     setState(prev => ({ ...prev, ouraLoading: true, ouraError: null }));
     try {
-      const statusRes = await fetch('/api/oura/status');
+      const statusRes = await fetch('/api/oura-status');
       const status = await safeJson(statusRes);
       if (!status || !status.connected) {
         setState(prev => ({ ...prev, ouraConnected: false, ouraData: null, ouraLoading: false }));
         return;
       }
-      const dataRes = await fetch('/api/oura/data');
+      const dataRes = await fetch('/api/oura-data');
       const data = await safeJson(dataRes);
       if (dataRes.status === 401 || !data) {
         setState(prev => ({ ...prev, ouraConnected: false, ouraData: null, ouraLoading: false }));
@@ -501,7 +501,7 @@ export default function App() {
   const connectOura = async () => {
     setState(prev => ({ ...prev, ouraError: null }));
     try {
-      const res = await fetch('/api/oura/auth-url');
+      const res = await fetch('/api/oura-auth-url');
       const body = await safeJson(res);
       const url = body?.url;
       const error = body?.error;
@@ -516,7 +516,7 @@ export default function App() {
 
   const disconnectOura = async () => {
     try {
-      await fetch('/api/oura/disconnect', { method: 'POST' });
+      await fetch('/api/oura-disconnect', { method: 'POST' });
       setState(prev => ({ ...prev, ouraConnected: false, ouraData: null }));
     } catch (e) {
       const msg = e?.message || '';
