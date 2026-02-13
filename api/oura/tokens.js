@@ -1,116 +1,47 @@
 /**
  * Oura token storage for Vercel serverless.
- * Supports (1) Upstash REST: UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN
- * or (2) Native Redis: REDIS_URL (must start with redis:// or rediss://).
+ * Uses ONLY Upstash REST (UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN).
+ * No native Redis client — avoids "string did not match the expected pattern" in serverless.
  */
-import { createClient } from 'redis';
 import { Redis } from '@upstash/redis';
 
 const KEY = 'oura_tokens';
 
-function useUpstashRest() {
+function getRedis() {
   const url = process.env.UPSTASH_REDIS_REST_URL;
   const token = process.env.UPSTASH_REDIS_REST_TOKEN;
-  return url && token && url.startsWith('http');
-}
-
-/** Strip quotes Vercel/env might have stored around the URL. */
-function sanitizeRedisUrl(url) {
-  if (!url || typeof url !== 'string') return '';
-  const s = url.trim().replace(/^["']|["']$/g, '').trim();
-  return s.startsWith('redis://') || s.startsWith('rediss://') ? s : '';
-}
-
-function useNativeRedis() {
-  return !!sanitizeRedisUrl(process.env.REDIS_URL);
-}
-
-async function getUpstashClient() {
-  if (!useUpstashRest()) return null;
-  return new Redis({
-    url: process.env.UPSTASH_REDIS_REST_URL,
-    token: process.env.UPSTASH_REDIS_REST_TOKEN,
-  });
-}
-
-async function getNativeClient() {
-  const url = sanitizeRedisUrl(process.env.REDIS_URL);
-  if (!url) return null;
-  try {
-    const client = createClient({ url });
-    client.on('error', () => {});
-    await client.connect();
-    return client;
-  } catch (err) {
-    console.error('Oura Redis connect:', err?.message || err);
-    return null;
-  }
+  if (!url || !token || !url.startsWith('http')) return null;
+  return new Redis({ url, token });
 }
 
 export async function loadTokens() {
-  const upstash = await getUpstashClient();
-  if (upstash) {
-    try {
-      const raw = await upstash.get(KEY);
-      return raw != null ? (typeof raw === 'string' ? JSON.parse(raw) : raw) : null;
-    } catch {
-      return null;
-    }
-  }
-  let client;
+  const redis = getRedis();
+  if (!redis) return null;
   try {
-    client = await getNativeClient();
-    if (!client) return null;
-    const raw = await client.get(KEY);
-    return raw ? JSON.parse(raw) : null;
+    const raw = await redis.get(KEY);
+    return raw != null ? (typeof raw === 'string' ? JSON.parse(raw) : raw) : null;
   } catch {
     return null;
-  } finally {
-    if (client) await client.quit();
   }
 }
 
 export async function saveTokens(tokens) {
-  const upstash = await getUpstashClient();
-  if (upstash) {
-    try {
-      await upstash.set(KEY, JSON.stringify(tokens));
-    } catch (e) {
-      console.error('Oura saveTokens:', e);
-    }
-    return;
-  }
-  let client;
+  const redis = getRedis();
+  if (!redis) return;
   try {
-    client = await getNativeClient();
-    if (!client) return;
-    await client.set(KEY, JSON.stringify(tokens));
+    await redis.set(KEY, JSON.stringify(tokens));
   } catch (e) {
     console.error('Oura saveTokens:', e);
-  } finally {
-    if (client) await client.quit();
   }
 }
 
 export async function clearTokens() {
-  const upstash = await getUpstashClient();
-  if (upstash) {
-    try {
-      await upstash.del(KEY);
-    } catch (e) {
-      console.error('Oura clearTokens:', e);
-    }
-    return;
-  }
-  let client;
+  const redis = getRedis();
+  if (!redis) return;
   try {
-    client = await getNativeClient();
-    if (!client) return;
-    await client.del(KEY);
+    await redis.del(KEY);
   } catch (e) {
     console.error('Oura clearTokens:', e);
-  } finally {
-    if (client) await client.quit();
   }
 }
 

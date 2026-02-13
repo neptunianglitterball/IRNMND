@@ -50,7 +50,7 @@ Precision fat-loss coach app: 1800 kcal target, AI-generated nutrition & trainin
    - `OURA_CLIENT_ID`, `OURA_CLIENT_SECRET` from your [Oura app](https://cloud.ouraring.com/oauth/applications).
    - `OURA_REDIRECT_URI` = `https://YOUR_VERCEL_DOMAIN.vercel.app/api/oura/callback` (replace with your real domain).
    - `OURA_FRONTEND_URL` = `https://YOUR_VERCEL_DOMAIN.vercel.app` (no trailing slash).
-3. **Redis (required for Oura in production):** In the Vercel project go to **Integrations** → add **Upstash Redis** (or **Storage** → connect a Redis from the Marketplace) and link it to the project. Upstash adds `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` automatically; alternatively you can set `REDIS_URL` (must start with `redis://` or `rediss://`). This stores Oura tokens (serverless has no filesystem).
+3. **Upstash Redis (required for Oura in production):** In the Vercel project go to **Integrations** → **Upstash Redis** → Add / Connect and link it to this project. This adds `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` automatically. Do not use a different Redis (e.g. Redis Labs with `REDIS_URL`) — only Upstash REST is supported so Oura tokens work in serverless.
 4. In the **Oura** app settings, add the redirect URI: `https://YOUR_VERCEL_DOMAIN.vercel.app/api/oura/callback`.
 5. Redeploy. "Connect Oura" on the live site will then work.
 
