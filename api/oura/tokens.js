@@ -9,13 +9,17 @@ import { Redis } from '@upstash/redis';
 const KEY = 'oura_tokens';
 
 function getRedis() {
-  // Standard Upstash, or Vercel-linked store (names can be storage_KV_* or STORAGE_KV_*)
-  let url = process.env.UPSTASH_REDIS_REST_URL || process.env.storage_KV_REST_API_URL || process.env.STORAGE_KV_REST_API_URL || process.env.KV_REST_API_URL;
-  let token = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.storage_KV_REST_API_TOKEN || process.env.STORAGE_KV_REST_API_TOKEN || process.env.KV_REST_API_TOKEN;
-  if (!url || !token || !String(url).trim().startsWith('http')) return null;
-  url = String(url).trim();
-  token = String(token).trim();
-  return new Redis({ url, token });
+  try {
+    // Standard Upstash, or Vercel-linked store (names can be storage_KV_* or STORAGE_KV_*)
+    let url = process.env.UPSTASH_REDIS_REST_URL || process.env.storage_KV_REST_API_URL || process.env.STORAGE_KV_REST_API_URL || process.env.KV_REST_API_URL;
+    let token = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.storage_KV_REST_API_TOKEN || process.env.STORAGE_KV_REST_API_TOKEN || process.env.KV_REST_API_TOKEN;
+    if (!url || !token || !String(url).trim().startsWith('http')) return null;
+    url = String(url).trim();
+    token = String(token).trim();
+    return new Redis({ url, token });
+  } catch {
+    return null;
+  }
 }
 
 export async function loadTokens() {
