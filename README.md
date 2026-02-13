@@ -45,7 +45,7 @@ Precision fat-loss coach app: 1800 kcal target, AI-generated nutrition & trainin
 
 ## Deploy on Vercel (with Oura in production)
 
-1. Push the repo to GitHub and import it in [Vercel](https://vercel.com). Build: `npm run build`, Output: `dist`.
+1. Push the repo to GitHub and import it in [Vercel](https://vercel.com). Build: `npm run build`, Output: `dist`. **Important:** In Vercel → Project → **Settings** → **General** → **Root Directory**, leave empty (or set to the folder that contains both `api/` and `package.json`). If Root Directory points elsewhere, `/api/oura/*` will return 404.
 2. **Environment variables** (Vercel → Project → Settings → Environment Variables):
    - `OURA_CLIENT_ID`, `OURA_CLIENT_SECRET` from your [Oura app](https://cloud.ouraring.com/oauth/applications).
    - `OURA_REDIRECT_URI` = `https://YOUR_VERCEL_DOMAIN.vercel.app/api/oura/callback` (replace with your real domain).
