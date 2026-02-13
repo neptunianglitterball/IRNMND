@@ -45,14 +45,26 @@ Precision fat-loss coach app: 1800 kcal target, AI-generated nutrition & trainin
 
 ## Deploy on Vercel (with Oura in production)
 
-1. Push the repo to GitHub and import it in [Vercel](https://vercel.com). Build: `npm run build`, Output: `dist`. **Critical for Oura API:** In Vercel → **Settings** → **Build and Deployment** → **Framework Preset**, set to **Other** (not Vite). With "Vite", only the static `dist/` is deployed and `/api/*` returns 404. With "Other", both `dist/` and the `api/` folder are deployed so `/api/oura/*` work. Root Directory must be empty (or the folder that contains `package.json` and `api/`).
-2. **Environment variables** (Vercel → Project → Settings → Environment Variables):
-   - `OURA_CLIENT_ID`, `OURA_CLIENT_SECRET` from your [Oura app](https://cloud.ouraring.com/oauth/applications).
-   - `OURA_REDIRECT_URI` = `https://YOUR_VERCEL_DOMAIN.vercel.app/api/oura-callback` (flat path; replace with your real domain).
-   - `OURA_FRONTEND_URL` = `https://YOUR_VERCEL_DOMAIN.vercel.app` (no trailing slash).
-3. **Upstash Redis (required for Oura in production):** In the Vercel project go to **Integrations** → **Upstash Redis** → Add / Connect and link it to this project. This adds `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` automatically. Do not use a different Redis (e.g. Redis Labs with `REDIS_URL`) — only Upstash REST is supported so Oura tokens work in serverless.
-4. In the **Oura** app settings, add the redirect URI: `https://YOUR_VERCEL_DOMAIN.vercel.app/api/oura-callback`.
-5. Redeploy. "Connect Oura" on the live site will then work.
+The main app’s `api/` folder often returns 404 on Vercel (Vite/static deploy). Use **two Vercel projects**: one for the frontend, one for the Oura API.
+
+### Project 1: Frontend (existing – ironmind-coach)
+
+1. Push the repo and deploy as usual. Build: `npm run build`, Output: `dist`. Framework: Vite is fine.
+2. **Environment variable:** Add `VITE_OURA_API_URL` = `https://YOUR_API_PROJECT_DOMAIN` (no trailing slash). Example: `https://ironmind-coach-api.vercel.app`. This is the URL of **Project 2** below.
+3. Redeploy after setting the variable.
+
+### Project 2: Oura API (new – e.g. ironmind-coach-api)
+
+1. In Vercel: **Add New** → **Project** → import the **same repo**.
+2. Set **Root Directory** to **`api-vercel`** (the folder that contains only the API).
+3. **Build:** Framework **Other**. Build Command: leave empty or `echo "No build"`. Output Directory: empty.
+4. **Environment variables:** Same as before: `OURA_CLIENT_ID`, `OURA_CLIENT_SECRET`, `OURA_REDIRECT_URI`, `OURA_FRONTEND_URL`, and Upstash (link Storage or set `STORAGE_KV_REST_API_URL` / `STORAGE_KV_REST_API_TOKEN`).
+   - `OURA_REDIRECT_URI` = `https://YOUR_API_PROJECT_DOMAIN/api/oura-callback` (e.g. `https://ironmind-coach-api.vercel.app/api/oura-callback`).
+   - `OURA_FRONTEND_URL` = `https://ironmind-coach.vercel.app` (your frontend URL).
+5. In the **Oura** app, set redirect URI to `https://YOUR_API_PROJECT_DOMAIN/api/oura-callback`.
+6. Deploy. Then open `https://YOUR_API_PROJECT_DOMAIN/api/oura-status` – you should get JSON, not 404.
+
+See **api-vercel/README.md** for a step-by-step checklist.
 
 ## Scripts
 
