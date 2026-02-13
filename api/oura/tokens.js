@@ -14,9 +14,15 @@ function useUpstashRest() {
   return url && token && url.startsWith('http');
 }
 
+/** Strip quotes Vercel/env might have stored around the URL. */
+function sanitizeRedisUrl(url) {
+  if (!url || typeof url !== 'string') return '';
+  const s = url.trim().replace(/^["']|["']$/g, '').trim();
+  return s.startsWith('redis://') || s.startsWith('rediss://') ? s : '';
+}
+
 function useNativeRedis() {
-  const url = (process.env.REDIS_URL || '').trim();
-  return url && (url.startsWith('redis://') || url.startsWith('rediss://'));
+  return !!sanitizeRedisUrl(process.env.REDIS_URL);
 }
 
 async function getUpstashClient() {
@@ -28,12 +34,17 @@ async function getUpstashClient() {
 }
 
 async function getNativeClient() {
-  if (!useNativeRedis()) return null;
-  const url = (process.env.REDIS_URL || '').trim();
-  const client = createClient({ url });
-  client.on('error', () => {});
-  await client.connect();
-  return client;
+  const url = sanitizeRedisUrl(process.env.REDIS_URL);
+  if (!url) return null;
+  try {
+    const client = createClient({ url });
+    client.on('error', () => {});
+    await client.connect();
+    return client;
+  } catch (err) {
+    console.error('Oura Redis connect:', err?.message || err);
+    return null;
+  }
 }
 
 export async function loadTokens() {
