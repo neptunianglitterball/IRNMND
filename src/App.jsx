@@ -321,7 +321,8 @@ export default function App() {
     if (oura) {
       window.history.replaceState({}, '', window.location.pathname || '/');
       if (oura === 'error') {
-        const msg = params.get('message') || 'Oura connection failed';
+        let msg = params.get('message') || 'Oura connection failed';
+        if (/expected pattern|did not match/i.test(msg)) msg = 'Oura connection unavailable. Use screenshot fallback or try again later.';
         setState(prev => ({ ...prev, ouraError: msg, ouraConnected: false }));
       }
     }
@@ -353,7 +354,11 @@ export default function App() {
         energyLevel: latest?.score ?? prev.energyLevel,
       }));
     } catch (e) {
-      setState(prev => ({ ...prev, ouraLoading: false, ouraError: e.message }));
+      const msg = e?.message || '';
+      const friendly = /expected pattern|did not match/i.test(msg)
+        ? 'Oura connection unavailable. Use screenshot fallback or try again later.'
+        : msg;
+      setState(prev => ({ ...prev, ouraLoading: false, ouraError: friendly }));
     }
   };
 
@@ -492,7 +497,9 @@ export default function App() {
       if (error || !url) throw new Error(error || 'Server not configured');
       window.location.href = url;
     } catch (e) {
-      setState(prev => ({ ...prev, ouraError: e.message }));
+      const msg = e?.message || '';
+      const friendly = /expected pattern|did not match/i.test(msg) ? 'Oura connection unavailable. Try again later.' : msg;
+      setState(prev => ({ ...prev, ouraError: friendly }));
     }
   };
 
@@ -501,7 +508,9 @@ export default function App() {
       await fetch('/api/oura/disconnect', { method: 'POST' });
       setState(prev => ({ ...prev, ouraConnected: false, ouraData: null }));
     } catch (e) {
-      setState(prev => ({ ...prev, ouraError: e.message }));
+      const msg = e?.message || '';
+      const friendly = /expected pattern|did not match/i.test(msg) ? 'Oura connection unavailable.' : msg;
+      setState(prev => ({ ...prev, ouraError: friendly }));
     }
   };
 
