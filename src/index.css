@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Range input reset for accent styling */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: theme('colors.purple.500');
+  cursor: pointer;
+  border: 2px solid theme('colors.neutral.900');
+}
+
+input[type="range"].accent-blue-500::-webkit-slider-thumb {
+  background: theme('colors.blue.500');
+}
+
+input[type="range"].accent-indigo-500::-webkit-slider-thumb {
+  background: theme('colors.indigo.500');
+}
+
+input[type="range"].accent-orange-500::-webkit-slider-thumb {
+  background: theme('colors.orange.500');
+}
