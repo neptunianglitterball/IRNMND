@@ -43,6 +43,17 @@ Precision fat-loss coach app: 1800 kcal target, AI-generated nutrition & trainin
 - Gemini API (`gemini-2.5-flash-preview-09-2025`)
 - Express server for Oura OAuth2 + data proxy (no secrets in frontend)
 
+## Deploy on Vercel (with Oura in production)
+
+1. Push the repo to GitHub and import it in [Vercel](https://vercel.com). Build: `npm run build`, Output: `dist`.
+2. **Environment variables** (Vercel → Project → Settings → Environment Variables):
+   - `OURA_CLIENT_ID`, `OURA_CLIENT_SECRET` from your [Oura app](https://cloud.ouraring.com/oauth/applications).
+   - `OURA_REDIRECT_URI` = `https://YOUR_VERCEL_DOMAIN.vercel.app/api/oura/callback` (replace with your real domain).
+   - `OURA_FRONTEND_URL` = `https://YOUR_VERCEL_DOMAIN.vercel.app` (no trailing slash).
+3. **Redis (required for Oura in production):** In the Vercel project go to **Storage** → connect a **Redis** database from the Marketplace and link it to the project. This creates `REDIS_URL` and stores Oura tokens (serverless has no filesystem).
+4. In the **Oura** app settings, add the redirect URI: `https://YOUR_VERCEL_DOMAIN.vercel.app/api/oura/callback`.
+5. Redeploy. "Connect Oura" on the live site will then work.
+
 ## Scripts
 
 - `npm run dev` – Vite + Oura server (proxy `/api` to backend)
