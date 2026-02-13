@@ -328,22 +328,31 @@ export default function App() {
     }
   }, []);
 
+  const safeJson = async (res) => {
+    const text = await res.text();
+    try {
+      return text ? JSON.parse(text) : {};
+    } catch {
+      return null;
+    }
+  };
+
   const fetchOuraStatus = async () => {
     setState(prev => ({ ...prev, ouraLoading: true, ouraError: null }));
     try {
       const statusRes = await fetch('/api/oura/status');
-      const status = await statusRes.json();
-      if (!status.connected) {
+      const status = await safeJson(statusRes);
+      if (!status || !status.connected) {
         setState(prev => ({ ...prev, ouraConnected: false, ouraData: null, ouraLoading: false }));
         return;
       }
       const dataRes = await fetch('/api/oura/data');
-      const data = await dataRes.json();
-      if (dataRes.status === 401) {
+      const data = await safeJson(dataRes);
+      if (dataRes.status === 401 || !data) {
         setState(prev => ({ ...prev, ouraConnected: false, ouraData: null, ouraLoading: false }));
         return;
       }
-      if (!dataRes.ok) throw new Error(data.error || 'Failed to load Oura data');
+      if (!dataRes.ok) throw new Error(data?.error || 'Failed to load Oura data');
       const latest = data.readiness?.[data.readiness.length - 1];
       setState(prev => ({
         ...prev,
@@ -355,7 +364,7 @@ export default function App() {
       }));
     } catch (e) {
       const msg = e?.message || '';
-      const friendly = /expected pattern|did not match/i.test(msg)
+      const friendly = /expected pattern|did not match|not valid json/i.test(msg)
         ? 'Oura connection unavailable. Use screenshot fallback or try again later.'
         : msg;
       setState(prev => ({ ...prev, ouraLoading: false, ouraError: friendly }));
@@ -493,12 +502,14 @@ export default function App() {
     setState(prev => ({ ...prev, ouraError: null }));
     try {
       const res = await fetch('/api/oura/auth-url');
-      const { url, error } = await res.json();
+      const body = await safeJson(res);
+      const url = body?.url;
+      const error = body?.error;
       if (error || !url) throw new Error(error || 'Server not configured');
       window.location.href = url;
     } catch (e) {
       const msg = e?.message || '';
-      const friendly = /expected pattern|did not match/i.test(msg) ? 'Oura connection unavailable. Try again later.' : msg;
+      const friendly = /expected pattern|did not match|not valid json/i.test(msg) ? 'Oura connection unavailable. Try again later.' : msg;
       setState(prev => ({ ...prev, ouraError: friendly }));
     }
   };
